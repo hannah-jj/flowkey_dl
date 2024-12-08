@@ -22,7 +22,7 @@ def main():
         type=str,
         help="Artist of the provided title",
     )
-
+    args = parser.parse_args()
     # args = parser.parse_args(["https://cdn.flowkey.com/rendered-sheets/rXHKwugAh7rfruoZv/a0f6e032/horizontalSheet-7d7e844f-2024-10-02T08.50.png", "/Users/hannah/OneDrive/music-scores/piano/flowkey/Silent-Night-Advanced/Silent-Night-Advanced.pdf", "-t", "Silent Night", "-a", "Franz Xaver Gruber"])
     # args = parser.parse_args(["https://app.flowkey.com/player/rXHKwugAh7rfruoZv", "/Users/hannah/OneDrive/music-scores/piano/flowkey/Silent-Night-Advanced/Silent-Night-Advanced.pdf", "-t", "Silent Night", "-a", "Franz Xaver Gruber"])
     # args = parser.parse_args(["https://cdn.flowkey.com/rendered-sheets/Rvq3eyzqhe5FgmK3J/617e6589/horizontalSheet-c8e3eafc-2024-10-02T08.50.png", "/Users/hannah/OneDrive/music-scores/piano/flowkey/Ode-to-Joy--Symphony-No.-9-Beginner/Ode-to-Joy--Symphony-No.-9-Beginner.pdf", "-t", "Ode to Joy – Symphony No. 9", "-a", "Ludwig van Beethoven"])   

@@ -55,6 +55,8 @@ def extract_images_from_image_url(url):
 
 
 def extract_images_from_page_url(url):
+    if "png" in url:
+        url = url[:url.rfind('/', 0, url.rfind('/'))]
     driver = webdriver.Chrome()
 
     # Navigate to the page
