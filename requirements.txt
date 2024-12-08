@@ -4,3 +4,5 @@ imageio
 Pillow > 8.0.0
 matplotlib
 importlib-metadata
+selenium
+bs4

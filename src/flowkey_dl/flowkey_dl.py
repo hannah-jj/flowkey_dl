@@ -6,10 +6,15 @@ from PIL import Image, ImageDraw, ImageFont
 from matplotlib import font_manager
 import numpy as np
 from PIL.PngImagePlugin import PngImageFile, PngInfo
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from bs4 import BeautifulSoup
+import time
 
 
-def flowkey_dl(url):
-    # url=os.path.dirname(url)+'/{}.png'
+def extract_images_from_image_url(url):
     url = strip_url(url)
     try:
         filename = pkg_resources.resource_filename(
@@ -46,9 +51,71 @@ def flowkey_dl(url):
                   f"ignoring: {patch} \nshape: {patch.shape}")
         i += 1
     print(f"downloaded {len(imgs)} patches form {url}")
-    # print([i.shape for i in imgs])
+    return np.hstack(imgs), None, None    
 
-    return np.hstack(imgs), None, None
+
+def extract_images_from_page_url(url):
+    driver = webdriver.Chrome()
+
+    # Navigate to the page
+    driver.get(url)
+
+    # Wait for the page to fully render (e.g., wait for a specific element to be present)
+    WebDriverWait(driver, 120).until(
+        EC.presence_of_element_located((By.CLASS_NAME, 'sheet-image'))
+    )
+
+    # Get the page source and pass it to BeautifulSoup
+    html = driver.page_source
+    soup = BeautifulSoup(html, 'html.parser')
+
+    # Close the browser
+    driver.quit()
+    # Find all divs with class 'sheet-image'
+    sheet_images = soup.find_all('div', class_='sheet-image')
+    image_urls = []
+    for div in sheet_images:
+        style = div.get('style')
+        if style:
+            start = style.find('url("') + len('url("')
+            end = style.find('")', start)
+            url = style[start:end]
+            image_urls.append(url)
+    print(image_urls)
+
+    imgs = list()
+    initial_shape_size = None
+    for image_url in image_urls:
+        # im = imageio.imread(url.format(i))
+        r = requests.get(image_url)
+        if r.content[-6:-1] == b"Error" or r.content == b'Not Found':
+            break
+        patch = imageio.imread(r.content, format='png', pilmode="RGBA")
+        print(f"loaded patch {image_url} with shape {patch.shape}")
+        if not initial_shape_size:
+            initial_shape_size = patch.shape[0]
+        if initial_shape_size and patch.shape[0] != initial_shape_size:
+            print("ignoring shape not matching to the first shape's size")
+            break
+        if len(patch.shape) == 3 and patch.shape[2] == 4:  # rgba
+            imgs.append(255 - patch[:, :, 3])
+        elif len(patch.shape) == 2:  # bw
+            imgs.append(patch)
+        else:
+            print(f"patch {image_url} looks strange, " +
+                  f"ignoring: {patch} \nshape: {patch.shape}")
+    print(f"downloaded {len(imgs)} patches form {url}")
+    return np.hstack(imgs), None, None    
+
+
+def flowkey_dl(url):
+    if "cdn" in url:
+        # backward compatibility to use image url
+        return extract_images_from_image_url(url)
+    else:
+        # use page main url
+        return extract_images_from_page_url(url)
+
 
 
 def find_measure(image, min_sz=100):
